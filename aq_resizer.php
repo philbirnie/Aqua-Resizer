@@ -126,11 +126,30 @@ if(!class_exists('Aq_Resize')) {
                     if ( is_wp_error( $editor ) || is_wp_error( $editor->resize( $width, $height, $crop ) ) )
                         return false;
 
+
                     $resized_file = $editor->save();
+
+
 
                     if ( ! is_wp_error( $resized_file ) ) {
                         $resized_rel_path = str_replace( $upload_dir, '', $resized_file['path'] );
                         $img_url = $upload_url . $resized_rel_path;
+
+                        /**
+                         * Try this to see if we can upload to Rackspace's CDN
+                         */
+                        wp_insert_attachment(
+                            array(
+                                'guid'      => $upload_url . $resized_rel_path,
+                                'post_title' => preg_replace( '/\.[^.]+$/', '', basename($resized_file['file'])),
+                                'post_content' => '',
+                                'post_status' => 'inherit',
+                                'post_mime_type' => $resized_file['mime-type']
+                            ),
+                            $resized_file['path'],
+                            0
+                        );
+
                     } else {
                         return false;
                     }
